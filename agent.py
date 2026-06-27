@@ -1,8 +1,11 @@
 from tools import get_order, get_product, search_products
+from llm import general_chat
 
 
 def run_agent(question):
+    
 
+    original_question = question
     question = question.upper()
 
     # ---------------- CHEAPER ALTERNATIVE ----------------
@@ -44,25 +47,8 @@ def run_agent(question):
             f"{best['name']} - ₹{best['price']}"
         )
 
-    # ---------------- SEARCH PRODUCTS ----------------
-    if "SEARCH" in question:
-
-        query = question.replace("SEARCH", "").strip().title()
-
-        found_products = search_products(query)
-
-        if len(found_products) == 0:
-            return "Sorry! No matching products found."
-
-        response = "Available Products:\n\n"
-
-        for product in found_products:
-            response += f"• {product['name']} - ₹{product['price']}\n"
-
-        return response
-
     # ---------------- ORDER STATUS ----------------
-    if "ORD-" in question:
+    if "ORD-" in question:  
 
         words = question.split()
         order_id = None
@@ -117,10 +103,37 @@ def run_agent(question):
             f"Price : ₹{product['price']}"
         )
 
-    return (
-        "Sorry! I can help you with:\n"
-        "1. Order Status\n"
-        "2. Product Search\n"
-        "3. Product Details\n"
-        "4. Cheaper Alternatives"
-    )
+    # ---------------- SEARCH PRODUCTS ----------------
+    if (
+        "SEARCH" in question
+        or "SHOW" in question
+        or "LIST" in question
+    ):
+
+        query = (
+            original_question.replace("search", "")
+            .replace("Search", "")
+            .replace("show", "")
+            .replace("Show", "")
+            .replace("list", "")
+            .replace("List", "")
+            .strip()
+        )
+
+        found_products = search_products(query)
+
+        if len(found_products) == 0:
+            return "Sorry! No matching products found."
+
+        response = "Available Products:\n\n"
+
+        for product in found_products:
+            response += f"• {product['name']} - ₹{product['price']}\n"
+
+        return response
+
+    # ---------------- GENERAL QUESTIONS ----------------
+    # If no rule matches, ask Gemini
+    return general_chat(original_question)
+
+   
